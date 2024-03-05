@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto
+    ports:
+      - "1883:1883" # Default MQTT port
+      - "9001:9001" # Websocket port, if later we want websocket support
+    volumes:
+      - ./mqtt/config:/mosquitto/config
+      - ./mqtt/data:/mosquitto/data
+      - ./mqtt/log:/mosquitto/log
+    restart: unless-stopped
