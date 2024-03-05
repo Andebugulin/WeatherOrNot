@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Temperature Display</title>
+    <script>
+        const ws = new WebSocket('ws://localhost:3000');
+        ws.onmessage = function(event) {
+            document.getElementById('temperature').innerText = `Temperature: ${event.data} °C`;
+        };
+    </script>
+</head>
+<body>
+    <h1>Real-time Temperature</h1>
+    <div id="temperature">Waiting for data...</div>
+</body>
+</html>
