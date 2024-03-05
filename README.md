@@ -56,7 +56,7 @@ This project sets up a real-time temperature monitoring system using an ESP32 mi
 1. Navigate to the `server` directory.
 2. Run `docker-compose up -d` to start the Mosquitto MQTT broker.
 
-   - If you want to verify MQTT broker setup see: [Verify MQTT broker Guide](server/README.md)
+   - If you want to verify MQTT broker setup see: [Verify MQTT broker Guide](server/)
 
 ## Configuring the ESP32
 
