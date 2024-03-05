@@ -38,3 +38,6 @@ mosquitto_pub -h 127.0.0.1 -t test/topic -m "hello"
 #### Step 4: Verify Message Receipt
 
 Go back to the terminal where you ran the `mosquitto_sub` command. You should see the "hello" message you just published. If you see the message, it confirms that your MQTT broker is set up correctly and can successfully handle publishing and subscribing to topics.
+
+---
+Come back to initial README docs: [Main Project Documentation](../README.md)
