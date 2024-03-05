@@ -1,7 +1,11 @@
 
 ### Verifying the MQTT Broker Setup
 
-After you've started your MQTT broker using `docker-compose`, you can verify that it's working correctly by subscribing to a topic and publishing a message to that topic. Follow these steps to test your setup:
+After you've started your MQTT broker using `docker-compose` 
+```
+docker-compose up -d
+```
+you can verify that it's working correctly by subscribing to a topic and publishing a message to that topic. Follow these steps to test your setup:
 
 #### Step 1: Check Docker Container
 
