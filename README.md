@@ -67,9 +67,9 @@ This project sets up a real-time temperature monitoring system using an ESP32 mi
 
 ---
 
-## fake esp32 measurements for testing
+## fake esp32 measurements for testing by command
 
-generating temperature script:
+run generating temperature script:
 ```bash
 ./scripts/fake_arduino.sh
 ```
