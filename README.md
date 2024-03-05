@@ -87,7 +87,7 @@ mosquitto_sub -h 127.0.0.1 -t esp32/temperature
 
 1. Navigate to the `web-app` directory.
 2. Run `npm install` to install dependencies.
-3. Start the application with `npm run dev`.
+4. Run the server that listens MQTT and start the application with `npm run dev`.
 
 
 # Usage
