@@ -7,28 +7,49 @@ your-project-name/
 │
 ├── firmware/                 # All microcontroller-related code
 │   ├── src/                  # Source files for ESP32
-│   │   ├── main.cpp          # Main firmware source file
-│   │   └── DHTSensor/        # DHT sensor handling
+│   │   ├── <something.ino>         # Main firmware source file
+│   │  
 │   ├── lib/                  # External libraries
-│   └── platformio.ini        # Configuration file for PlatformIO
 │
 ├── server/                   # Server-side code
 │   ├── Dockerfile            # Dockerfile for server environment
 │   ├── docker-compose.yml    # Docker compose file to manage services
-│   └── app/                  # Application source code
+│   └── app/                  
 │       ├── mqtt/             # MQTT broker setup
 │       └── database/         # Database scripts
-│           ├── models/       # Database models
-│           └── migrations/   # Database migration files
+│           ├── models/       
+│           └── migrations/   
 │
 ├── web-app/                  # Web application for end-users
-│   ├── src/                  # Vite/React application source files
-│   │   ├── components/       # React components
-│   │   ├── services/         # Services for backend communication
+│   ├── src/                  
+│   │   ├── components/       
+│   │   ├── services/        
 │   │   └── hooks/            # React hooks
-│   ├── index.html            # Entry HTML file
+your-project-name/
+│
+├── firmware/                 # All microcontroller-related code
+│   ├── src/                  # Source files for ESP32
+│   │   ├── <something.ino>         # Main firmware source file
+│   │  
+│   ├── lib/                  # External libraries
+│
+├── server/                   # Server-side code
+│   ├── Dockerfile            # Dockerfile for server environment
+│   ├── docker-compose.yml    # Docker compose file to manage services
+│   └── app/                  
+│       ├── mqtt/             # MQTT broker setup
+│       └── database/         # Database scripts
+│           ├── models/       
+│           └── migrations/   
+│
+├── web-app/                  # Web application for end-users
+│   ├── src/                  
+│   │   ├── components/       
+│   │   ├── services/        
+│   │   └── hooks/            
+│   ├── index.html            
 │   ├── vite.config.js        # Vite configuration file
 │   └── package.json          # NPM package file
 │
-└── scripts/                  # Utility scripts
+└── scripts/                  # Utility scripts (testing scripts or deployment)
 ```
