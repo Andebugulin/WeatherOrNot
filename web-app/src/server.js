@@ -1,28 +1,26 @@
-// typical express set up.
 import express from 'express';
-import { WebSocketServer, WebSocket } from 'ws';
+import cors from 'cors';
 import mqtt from 'mqtt';
 import { createServer } from 'http';
 
 const app = express();
 const PORT = 3000;
+let latestTemperature = ''; // Store the latest temperature
+
+// Enable CORS for all routes
+app.use(cors());
 
 // Serve static files from 'public' directory
 app.use(express.static('public'));
 
+// Route to get the latest temperature
+app.get('/temperature', (req, res) => {
+  res.json({ temperature: latestTemperature });
+});
+
 const server = createServer(app);
 
 server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-
-// WebSocket Server setup
-const wss = new WebSocketServer({ server });
-
-wss.on('connection', function connection(ws) {
-  console.log('A new client connected');
-  ws.on('message', function incoming(message) {
-    console.log('received: %s', message);
-  });
-});
 
 // MQTT setup
 const mqttClient = mqtt.connect('mqtt://127.0.0.1');
@@ -35,11 +33,6 @@ mqttClient.on('connect', () => {
 });
 
 mqttClient.on('message', (topic, message) => {
-  // Broadcast to all connected WebSocket clients
-  wss.clients.forEach(function each(client) {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(message.toString());
-    }
-  });
+  // Update the latest temperature
+  latestTemperature = message.toString();
 });
-
