@@ -58,12 +58,30 @@ This project sets up a real-time temperature monitoring system using an ESP32 mi
 
    - If you want to verify MQTT broker setup see: [Verify MQTT broker Guide](server/)
 
-## Configuring the ESP32
+## Configuring the ESP32 (for testing it is possible to fake it)
 
 1. Open the Arduino IDE or PlatformIO.
 2. Load the provided firmware code for reading temperature data.
 3. Adjust the WiFi and MQTT server settings in the code to match your environment.
 4. Upload the firmware to the ESP32.
+
+---
+
+## fake esp32 measurements for testing
+
+generating temperature script:
+```bash
+./scripts/fake_arduino.sh
+```
+
+This simulates publishing temperature data to `esp32/temperature` on your MQTT broker.
+
+To observe the data:
+```bash
+mosquitto_sub -h 127.0.0.1 -t esp32/temperature
+```
+
+---
 
 ## Running the Web Application
 
