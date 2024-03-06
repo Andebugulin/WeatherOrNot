@@ -1,68 +1,67 @@
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+  --background-color: #1b1b1f;
+  --box-color: #202127;
+  --text-color: #ececec;
+  --hover-color: #7d00b7;
 }
 
 body {
-  margin: 0;
+  font-family: 'Eloquia Display', Arial, sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
   display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  font-size: 70 px;
+  text-align: center;
+  transition: text-shadow 0.3s ease;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+h1:hover {
+  text-shadow: 0 0 50px var(--hover-color);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+h2 {
+  font-size: 36.6px;
+  text-align: center;
+}
+
+
+h3 {
+  font-size: 30px;
+  text-align: center;
+}
+
+.box {
+  background-color: var(--box-color);
+  border-radius: 10px;
+  width: 100%;
+  margin: 20px auto;
+  padding: 30px;
+  transition: box-shadow 0.3s ease; 
+}
+
+.box:hover {
+  box-shadow: 0 0 10px var(--hover-color);
+}
+
+.box p {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 2px;
+}
+
+.box span {
+  font-family: Eloquia Display;
+  font-size: 30px;
 }
