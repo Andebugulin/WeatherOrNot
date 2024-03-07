@@ -6,7 +6,7 @@ const WeatherBox = ({ temperature, humidity }) => (
       <h2>Average Temperature</h2>
       <span>{temperature}°C</span>
       <br />
-      <h2>Humidity:</h2> 
+      <h2>Humidity</h2> 
       <span>{humidity}%</span>
     </p>
   </div>
