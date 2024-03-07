@@ -1,54 +1,80 @@
 #!/bin/bash
 
-# MQTT broker settings
-mqtt_server="127.0.0.1"  # localhost if the script is run on the same machine
-mqtt_port="1883"  # Default MQTT port
-mqtt_topic="esp32/temperature"  # MQTT topic to publish to
-mqtt_client_id="fake_arduino"  # Client ID for MQTT connection
+
+mqtt_server="127.0.0.1"  
+mqtt_port="1883"  
+mqtt_topic_temperature="esp32/temperature"  
+mqtt_topic_humidity="esp32/humidity"  
+mqtt_client_id="fake_arduino"  
 
 
 echo "WiFi connected"
 echo "Connected to MQTT"
 
-# Initialize dummy measurements array and counter
+
 amountOfMeasurements=5
-measurements=(0 0 0 0 0)
+temperatureMeasurements=(0 0 0 0 0)
+humidityMeasurements=(0 0 0 0 0)
 measurementCounter=0
 
-# Add a simulated measurement
-function addMeasurement {
+
+function addTemperatureMeasurement {
   local temperature=$1
-  measurements[$measurementCounter]=$temperature
+  temperatureMeasurements[$measurementCounter]=$temperature
+}
+
+
+function addHumidityMeasurement {
+  local humidity=$1
+  humidityMeasurements[$measurementCounter]=$humidity
   measurementCounter=$(( (measurementCounter + 1) % amountOfMeasurements ))
 }
 
-# Calculate average of measurements
-function calculateAverage {
+
+function calculateTemperatureAverage {
   local total=0
-  for temp in "${measurements[@]}"; do
+  for temp in "${temperatureMeasurements[@]}"; do
     total=$(awk -v total="$total" -v temp="$temp" 'BEGIN { print total + temp }')
   done
   echo $(awk -v total="$total" -v count="$amountOfMeasurements" 'BEGIN { print total / count }')
 }
 
-# Main simulation loop
+
+function calculateHumidityAverage {
+  local total=0
+  for humidity in "${humidityMeasurements[@]}"; do
+    total=$(awk -v total="$total" -v humidity="$humidity" 'BEGIN { print total + humidity }')
+  done
+  echo $(awk -v total="$total" -v count="$amountOfMeasurements" 'BEGIN { print total / count }')
+}
+
+
 while true; do
-  # Generate a simulated temperature reading (let's say between 20 and 30 degrees)
+  
   measuredTemp=$(awk -v min=20 -v max=30 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
+  
+  measuredHumidity=$(awk -v min=30 -v max=60 'BEGIN{srand(); print int(min+rand()*(max-min+1))}')
+  
   echo ""
   echo "Simulated Temperature: $measuredTemp°C"
+  echo "Simulated Humidity: $measuredHumidity%"
   
-  # Add measurement and calculate average
-  addMeasurement $measuredTemp
-  averageTemp=$(calculateAverage)
   
-  # Prepare the average temperature as a string with two decimal places
+  addTemperatureMeasurement $measuredTemp
+  addHumidityMeasurement $measuredHumidity
+  averageTemp=$(calculateTemperatureAverage)
+  averageHumidity=$(calculateHumidityAverage)
+  
+  
   printf -v tempString "%.2f" $averageTemp
-  echo "Publishing Average Temp (simulated): $tempString°C to MQTT topic '$mqtt_topic'"
+  printf -v humidityString "%.2f" $averageHumidity
+  echo "Publishing Average Temp (simulated): $tempString°C to MQTT topic '$mqtt_topic_temperature'"
+  echo "Publishing Average Humidity (simulated): $humidityString% to MQTT topic '$mqtt_topic_humidity'"
   
-  # Publish the simulated average temperature to the MQTT broker
-  mosquitto_pub -h "$mqtt_server" -p "$mqtt_port" -t "$mqtt_topic" -m "$tempString" -i "$mqtt_client_id"
+  # Publish the simulated average temperature and humidity to the MQTT broker
+  mosquitto_pub -h "$mqtt_server" -p "$mqtt_port" -t "$mqtt_topic_temperature" -m "$tempString" -i "$mqtt_client_id"
+  mosquitto_pub -h "$mqtt_server" -p "$mqtt_port" -t "$mqtt_topic_humidity" -m "$humidityString" -i "$mqtt_client_id"
   
-  # Sleep for a bit before next loop iteration
+  
   sleep 1
-done 
+done
