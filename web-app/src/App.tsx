@@ -5,6 +5,9 @@ import WeatherBox from './WeatherBox';
 const App: React.FC = () => {
   const [temperature, setTemperature] = useState('Loading...');
   const [humidity, setHumidity] = useState('Loading...');
+  const [locationTemperature, setlocationTemperature] = useState('Loading...');
+  const [locationHumidity, setlocationHumidity] = useState('Loading...');
+
 
   useEffect(() => {
     const fetchTemperature = () => {
@@ -21,13 +24,25 @@ const App: React.FC = () => {
         .catch((error) => console.error('Error fetching humidity:', error));
     }
 
+    const fetchLocationWeather = () => {
+      fetch('https://api.open-meteo.com/v1/forecast?latitude=61.6875&longitude=27.2736&hourly=temperature_2m,relative_humidity_2m&past_days=7&forecast_days=3')
+        .then((response) => response.json())
+        .then((data) => {
+          const locationForecast = data.hourly; 
+          setlocationTemperature(locationForecast.temperature_2m[0]); 
+          setlocationHumidity(locationForecast.relative_humidity_2m[0]);
+        })
+        .catch((error) => console.error('Error fetching the weather data:', error));
+    };
+
 
     const intervalId = setInterval(fetchTemperature, 1000);
     const intervalId2 = setInterval(fetchHumidity, 1000);
     
     fetchTemperature();
     fetchHumidity();
-    
+    fetchLocationWeather();
+
     return () => {clearInterval(intervalId); clearInterval(intervalId2)};
   }, []);
 
@@ -38,7 +53,7 @@ const App: React.FC = () => {
         <h3>Current Location</h3>
         <WeatherBox temperature={temperature} humidity={humidity} />
         <h3>Mikkeli</h3>
-        <WeatherBox temperature={temperature} humidity={humidity} />
+        <WeatherBox temperature={locationTemperature} humidity={locationHumidity} />
       </header>
     </div>
   );
