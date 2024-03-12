@@ -2,6 +2,16 @@ import express from 'express';
 import cors from 'cors';
 import mqtt from 'mqtt';
 import { createServer } from 'http';
+import mongoose from 'mongoose';
+import { SensorData } from '../../server/database/models/SensorData.js';
+
+mongoose.connect('mongodb://root:example@localhost:27017/sensors', { // connect to mongodb with username root and password as example
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error:'));
+
 
 const app = express();
 const PORT = 3000;
@@ -15,13 +25,15 @@ app.use(cors());
 app.use(express.static('public'));
 
 // Route to get the latest temperature
-app.get('/temperature', (req, res) => {
-  res.json({ temperature: latestTemperature });
+app.get('/temperature', async (req, res) => {
+  const latestTemp = await SensorData.findOne({ type: 'temperature' }).sort({ timestamp: -1 }).exec();
+  res.json({ temperature: latestTemp ? latestTemp.value : 'No data' });
 });
 
 // Route to get the latest humidity
-app.get('/humidity', (req, res) => {
-  res.json({ humidity: latestHumidity });
+app.get('/humidity', async (req, res) => {
+  const latestHumid = await SensorData.findOne({ type: 'humidity' }).sort({ timestamp: -1 }).exec();
+  res.json({ humidity: latestHumid ? latestHumid.value : 'No data' });
 });
 
 const server = createServer(app);
@@ -39,11 +51,26 @@ mqttClient.on('connect', () => {
   });
 });
 
-mqttClient.on('message', (topic, message) => {
-  // Update the latest temperature or humidity based on the topic
+mqttClient.on('message', async (topic, message) => {
+  let type;
   if (topic === 'esp32/temperature') {
+    type = 'temperature';
     latestTemperature = message.toString();
   } else if (topic === 'esp32/humidity') {
+    type = 'humidity';
     latestHumidity = message.toString();
   }
+
+  // Save the new sensor data to MongoDB
+  try {
+    const sensorData = new SensorData({
+      type,
+      value: message.toString(),
+    });
+    await sensorData.save();
+    console.log(`Saved ${type} data to MongoDB.`);
+  } catch (error) {
+    console.error('Error saving data to MongoDB:', error);
+  }
 });
+
