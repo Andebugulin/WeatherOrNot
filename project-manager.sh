@@ -60,7 +60,10 @@ show_help() {
 # Shell mode enhanced with suggestions feature
 shell_mode() {
     while true; do
-        read -rp "${CYAN}project-manager> ${NO_COLOR}" cmd
+        # Print the prompt with colors
+        printf "${CYAN}project-manager> ${NO_COLOR}"
+        # Now, use read without the -p option
+        read -r cmd
         case $cmd in
             help) show_help ;;
             start-docker-compose) start_docker_compose ;;
@@ -82,6 +85,7 @@ shell_mode() {
         esac
     done
 }
+
 
 # Main script logic enhanced for color and shell mode
 if [ $# -eq 0 ]; then
