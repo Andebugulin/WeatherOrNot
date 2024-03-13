@@ -1,53 +1,46 @@
-// DHT - MQTT - Wifi
-// This contains only temperature. Humidity is not used.
-
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <DHT.h>
 
-// Wifi settings
-const char* ssid = " Your SSID ";
-const char* password = " Your Password for ssid";
+const char* ssid = "YOUR SSID";
+const char* password = "YOUR PASSWORD";
+const char* mqtt_server = "YOUR IP";
 
-// MQTT Server IP address
-const char* mqtt_server = "YOUR IP HERE";
-
-// WiFi client
 WiFiClient espClient;
-// MQTT client
 PubSubClient mqttClient(espClient);
 
-// DHT sensor settings
-#define DHTPIN 27
+#define DHTPIN 4
 #define DHTTYPE DHT11 
 
 DHT dht(DHTPIN, DHTTYPE);
 
-/* Variables for tracking the measurements for average calculation */
 int amountOfMeasurements = 5;
 int measurementCounter = 0;
 
-/* Measurements array */
-float measurements[] = {0.0, 0.0, 0.0, 0.0, 0.0};
+struct measurement {
+  float temperature;
+  float humidity; // New humidity field
+  struct measurement *next;
+};
 
-// Application setup
+struct measurement *firstMeasurement;
+struct measurement *currentMeasurement;
+
 void setup() {
-  // Serial
   Serial.begin(115200);
-  // DHT temperature sensor
   dht.begin();
-  // WiFi connection
   setup_wifi();
-  // MQTT
   mqttClient.setServer(mqtt_server, 1883);
 
-  Serial.println("Using array for calculating the sliding average.");
+  firstMeasurement = (struct measurement *) malloc(sizeof(struct measurement));
+  firstMeasurement->next = NULL;
+  currentMeasurement = firstMeasurement;
+
+  Serial.println("Using linked list for calculating the sliding average.");
 }
 
-// WiFi connection
 void setup_wifi() {
   delay(10);
-  // We start by connecting to a WiFi network
   Serial.println();
   Serial.print("Connecting to WiFi SSID: ");
   Serial.println(ssid);
@@ -65,12 +58,9 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
-// MQTT connection
 void reconnect() {
-  // Loop until we're reconnected
   while (!mqttClient.connected()) {
     Serial.print("Attempting MQTT connection...");
-    // Attempt to connect
     if (mqttClient.connect("ESP32_Client")) {
       Serial.println("connected");
     } 
@@ -78,66 +68,90 @@ void reconnect() {
       Serial.print("failed, rc=");
       Serial.print(mqttClient.state());
       Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
       delay(5000);
     }
   }
 }
 
-/* Function that is used to add or update new measurement in the list */
-void addMeasurement(float temperature) {
-    measurements[measurementCounter] = temperature;
-    /* Update position */
-    measurementCounter += 1;
-      /* Start again from the first item is the array is full */
-    if (measurementCounter == amountOfMeasurements) {
-        measurementCounter = 0;
+void addMeasurement(float temperature, float humidity) {
+  currentMeasurement->temperature = temperature;
+  currentMeasurement->humidity = humidity; // Store humidity
+  measurementCounter += 1;
+  if (measurementCounter == amountOfMeasurements) {
+    currentMeasurement = firstMeasurement;
+    measurementCounter = 0;
+  }
+  else {
+    if (!currentMeasurement->next) {
+      struct measurement *nextMeasurement;
+      nextMeasurement = (struct measurement *) malloc(sizeof(struct measurement));
+      currentMeasurement->next = nextMeasurement;
+      currentMeasurement = currentMeasurement->next;
+      currentMeasurement->next = NULL;
     }
+    else {
+      currentMeasurement = currentMeasurement->next;
+    }
+  }
 }
 
-/* Function to calculate the average of measured temperatures */
-float calculateAverage() {
-    float avgTemp = 0.0;
-    for (int counter = 0 ; counter < amountOfMeasurements ; counter++) {
-        avgTemp += measurements[counter];
-    }
-    /* Calculate the average temp */
-    avgTemp = avgTemp / amountOfMeasurements;
-    return(avgTemp);
+float calculateAverageTemperature() {
+  float avgTemp = 0.0;
+  struct measurement *avgMeasurement;
+  avgMeasurement = firstMeasurement;
+  while(avgMeasurement) {
+    avgTemp += avgMeasurement->temperature;
+    avgMeasurement = avgMeasurement->next;
+  }
+  avgTemp = avgTemp / amountOfMeasurements;
+  return(avgTemp);
 }
 
-// Application main loop
+float calculateAverageHumidity() {
+  float avgHumidity = 0.0;
+  struct measurement *avgMeasurement;
+  avgMeasurement = firstMeasurement;
+  while(avgMeasurement) {
+    avgHumidity += avgMeasurement->humidity;
+    avgMeasurement = avgMeasurement->next;
+  }
+  avgHumidity = avgHumidity / amountOfMeasurements;
+  return(avgHumidity);
+}
+
 void loop() {
-  // Reconnect mqtt if connection has been lost
   if (!mqttClient.connected()) {
     reconnect();
   }
 
-  // Variable for measured temperature
-  float measuredTemp = 0.0;
+  float measuredTemp = dht.readTemperature();
+  float measuredHumidity = dht.readHumidity(); // Read humidity
 
-  // Read temperature from sensor
-  measuredTemp = dht.readTemperature();
-
-  // Print measured temperature to serial console
   Serial.print("Temperature: ");
   Serial.println(measuredTemp);
+  Serial.print("Humidity: ");
+  Serial.println(measuredHumidity);
 
-  // Variable for average temperature
   float averageTemp = 0.0;
-  // Add measurement to list, calculate average temp and send it to mqtt
-  addMeasurement(measuredTemp);
-  averageTemp = calculateAverage();
+  float averageHumidity = 0.0;
 
-  // Print measured temperature to serial console
-  Serial.print("Average (array used): ");
+  addMeasurement(measuredTemp, measuredHumidity); // Add humidity to measurement
+  averageTemp = calculateAverageTemperature();
+  averageHumidity = calculateAverageHumidity(); // Calculate average humidity
+
+  Serial.println("--------------");
+  Serial.print("Average Temperature: ");
   Serial.println(averageTemp);
-
-  // Convert the average temperature value to a char array and publish it to MQTT
+  Serial.print("Average Humidity: ");
+  Serial.println(averageHumidity);
+  Serial.println("--------------");
   char tempString[8];
   dtostrf(averageTemp, 1, 2, tempString);
   mqttClient.publish("esp32/temperature", tempString);
 
-  // Sleep X seconds before next measurement
-  sleep(2);
+  char humidityString[8];
+  dtostrf(averageHumidity, 1, 2, humidityString);
+  mqttClient.publish("esp32/humidity", humidityString); // Publish humidity
+
+  delay(2000); // Sleep 2 seconds before next measurement
 }
