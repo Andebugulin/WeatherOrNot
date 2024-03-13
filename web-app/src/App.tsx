@@ -25,7 +25,7 @@ const App: React.FC = () => {
     }
 
     const fetchLocationWeather = () => {
-      fetch('https://api.open-meteo.com/v1/forecast?latitude=61.6875&longitude=27.2736&hourly=temperature_2m,relative_humidity_2m&past_days=7&forecast_days=3')
+      fetch('https://api.open-meteo.com/v1/forecast?latitude=61.6875&longitude=27.2736&hourly=temperature_2m,relative_humidity_2m&past_days=1')
         .then((response) => response.json())
         .then((data) => {
           const locationForecast = data.hourly; 
@@ -52,7 +52,7 @@ const App: React.FC = () => {
         <h1>WeatherOrNot</h1>
         <h3>Current Location</h3>
         <WeatherBox temperature={temperature} humidity={humidity} />
-        <h3>Mikkeli</h3>
+        <h3>Mikkeli (Avg. 24h)</h3>
         <WeatherBox temperature={locationTemperature} humidity={locationHumidity} />
       </header>
     </div>
