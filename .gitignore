@@ -1,2 +1,4 @@
 server/mqtt/log/mosquitto.log
 server/mqtt/data/mosquitto.db
+
+node_modules
