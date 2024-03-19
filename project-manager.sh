@@ -4,7 +4,6 @@
 GREEN="\033[32m"
 RED="\033[31m"
 CYAN="\033[36m"
-NO_COLOR="\033[0m"
 
 # Function to start docker-compose services
 start_docker_compose() {
@@ -57,34 +56,101 @@ show_help() {
     echo "  shell                Enter shell mode (interactive commands)${NO_COLOR}"
 }
 
-# Shell mode enhanced with suggestions feature
 shell_mode() {
+    # Disable input carriage return to newline translation
+    stty -icrnl
+
+    local input=""
+    local suggestions=()
+    local commands=("help" "start-docker-compose" "stop-docker-compose" "run-node-server" "run-vite-app" "run-fake-arduino" "exit")
+
+    # Cleanup function to re-enable icrnl on script exit
+    cleanup() {
+        # Re-enable input carriage return to newline translation
+        stty icrnl
+    }
+
+    # Register cleanup to run on script exit
+    trap cleanup EXIT
+    # Function to update suggestions based on current input
+    update_suggestions() {
+        suggestions=()
+        for i in "${commands[@]}"; do
+            if [[ "$i" == "$input"* ]]; then
+                suggestions+=("$i")
+            fi
+        done
+        
+    }
+
+    # Function to clear the screen and display the current state
+    display_state() {
+        clear
+          # Clears the terminal screen
+        printf "${CYAN}project-manager> ${NO_COLOR}${input}\n"
+        for suggestion in "${suggestions[@]}"; do
+            printf "   --- $suggestion\n"
+        done
+        
+    }
+
+    # Main loop to process input
     while true; do
-        # Print the prompt with colors
-        printf "${CYAN}project-manager> ${NO_COLOR}"
-        # Now, use read without the -p option
-        read -r cmd
-        case $cmd in
-            help) show_help ;;
-            start-docker-compose) start_docker_compose ;;
-            stop-docker-compose) stop_docker_compose ;;
-            run-node-server) run_node_server ;;
-            run-vite-app) run_vite_app ;;
-            run-fake-arduino) run_fake_arduino ;;
-            exit) break ;;
-            *) 
-                echo -e "${RED}Unknown command: $cmd. Suggestions:${NO_COLOR}"
-                local commands=("help" "start-docker-compose" "stop-docker-compose" "run-node-server" "run-vite-app" "run-fake-arduino" "exit")
-                for i in "${commands[@]}"; do
-                    if [[ "$i" == "$cmd"* ]]; then
-                        echo "  $i"
-                    fi
-                done
-                echo "Type 'help' for a list of commands."
+        display_state  # Display initial state
+
+        # Read user input (one character at a time)
+        IFS= read -r -n1 -s char
+        
+        printf "Char: '%s', ASCII: %x\n" "$char" "'$char"
+        case $char in
+               $'\x0a'|$'\x0d'|$'\x00')  # Enter key
+                
+                if [[ " ${commands[@]} " =~ " ${input} " ]]; then
+                    
+                    # Execute the command if it's exactly one of the options
+                    case $input in
+                        help) show_help ;;
+                        start-docker-compose) start_docker_compose ;;
+                        stop-docker-compose) stop_docker_compose ;;
+                        run-node-server) run_node_server ;;
+                        run-vite-app) run_vite_app ;;
+                        run-fake-arduino) run_fake_arduino ;;
+                        exit)
+                            
+                            break  # Exit the loop
+                            ;;
+                        *)
+                            printf "${RED}Unknown command: $input.${NO_COLOR}\n"
+                            ;;
+                    esac
+                fi
+                    
+                
+                input=""  # Reset input after executing a command
+                ;;
+            $'\x7f')  # Backspace
+                
+                input="${input%?}"  # Remove the last character from input
+                ;;
+            $'\x09')  # Tab key
+                
+                [[ ${#suggestions[@]} -gt 0 ]] && input="${suggestions[0]}"  # Autocomplete the first suggestion
+                ;;
+            $'\x20')  # Space
+                
+                input+=" "  # Append space to input
+                ;;
+            *)
+                
+                input+="$char"  # Append character to input
                 ;;
         esac
+
+        update_suggestions  # Update suggestions based on new input
     done
 }
+
+
 
 
 # Main script logic enhanced for color and shell mode
@@ -102,3 +168,4 @@ else
         *) echo -e "${RED}Invalid option: $1. Type '$0 help' for a list of commands.${NO_COLOR}" ;;
     esac
 fi
+
