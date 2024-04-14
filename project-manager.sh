@@ -14,30 +14,6 @@ start_docker_compose() {
     cd - || exit
 }
 
-# Function to run the node server in the background
-run_node_server() {
-    echo -e "${GREEN}Running node server...${NO_COLOR}"
-    cd web-app/ || exit
-    nohup node src/server.js > server.log 2>&1 &  # Run in background and log output
-    echo "Node server started. Logs are being written to 'server.log'"
-    cd - || exit
-}
-
-# Function to run Vite app in the background
-run_vite_app() {
-    echo -e "${GREEN}Starting Vite app...${NO_COLOR}"
-    cd web-app/ || exit
-    nohup npm run dev > vite.log 2>&1 &  # Run in background and log output
-    echo "Vite app started. Logs are being written to 'vite.log'"
-    cd - || exit
-}
-
-# Function to run fake Arduino script
-run_fake_arduino() {
-    echo -e "${GREEN}Running fake Arduino script...${NO_COLOR}"
-    ./scripts/fake_arduino.sh
-}
-
 # Function to stop docker-compose services
 stop_docker_compose() {
     echo -e "${GREEN}Stopping docker-compose services...${NO_COLOR}"
@@ -45,6 +21,70 @@ stop_docker_compose() {
     docker-compose down
     cd - || exit
 }
+
+# Function to run the node server in the background
+run_node_server() {
+    echo -e "${GREEN}Running node server...${NO_COLOR}"
+    cd web-app/ || exit
+    nohup node src/server.js > server.log 2>&1 &
+    echo $! > node_server.pid
+    echo "Node server started. Logs are being written to 'server.log'"
+    cd - || exit
+}
+
+# Function to stop the node server
+stop_node_server() {
+    echo -e "${GREEN}Stopping node server...${NO_COLOR}"
+    if [ -f web-app/node_server.pid ]; then
+        kill -9 $(cat web-app/node_server.pid)
+        rm web-app/node_server.pid
+        echo "Node server stopped."
+    else
+        echo "Node server PID file not found. Is the server running?"
+    fi
+}
+
+# Function to run Vite app in the background
+run_vite_app() {
+    echo -e "${GREEN}Starting Vite app...${NO_COLOR}"
+    cd web-app/ || exit
+    nohup npm run dev > vite.log 2>&1 &
+    echo $! > vite_app.pid
+    echo "Vite app started. Logs are being written to 'vite.log'"
+    cd - || exit
+}
+
+# Function to stop the Vite app
+stop_vite_app() {
+    echo -e "${GREEN}Stopping Vite app...${NO_COLOR}"
+    if [ -f web-app/vite_app.pid ]; then
+        PID=$(cat web-app/vite_app.pid)
+        if kill -0 $PID > /dev/null 2>&1; then
+            kill -SIGTERM $PID
+            rm web-app/vite_app.pid
+            echo "Vite app stopped."
+        else
+            echo "Vite app does not seem to be running."
+            rm web-app/vite_app.pid
+        fi
+    else
+        echo "Vite app PID file not found. Is the app running?"
+    fi
+}
+
+
+# Function to run fake Arduino script
+run_fake_arduino() {
+    echo -e "${GREEN}Running fake Arduino script...${NO_COLOR}"
+    ./scripts/fake_arduino.sh
+}
+
+# Function to install packages using package-manager.sh
+install_packages() {
+    echo -e "${GREEN}Installing packages using package-manager.sh...${NO_COLOR}"
+    ./package-manager.sh
+}
+
 # Update the show_help function with the new command
 show_help() {
     echo -e "${CYAN}Usage: $(basename "$0") [option]"
@@ -53,28 +93,24 @@ show_help() {
     echo "  start-docker-compose Start Docker Compose services"
     echo "  stop-docker-compose  Stop Docker Compose services"
     echo "  run-node-server      Run Node server"
+    echo "  stop-node-server     Stop Node server"
     echo "  run-vite-app         Start Vite app"
+    echo "  stop-vite-app        Stop Vite app"
     echo "  run-fake-arduino     Run fake Arduino script"
+    echo "  install-packages     Execute package-manager.sh to install packages"
     echo "  shell                Enter shell mode (interactive commands)${NO_COLOR}"
 }
 
 shell_mode() {
-    # Disable input carriage return to newline translation
     stty -icrnl
-
     local input=""
     local suggestions=()
-    local commands=("help" "start-docker-compose" "stop-docker-compose" "run-node-server" "run-vite-app" "run-fake-arduino" "exit")
+    local commands=("help" "start-docker-compose" "stop-docker-compose" "run-node-server" "stop-node-server" "run-vite-app" "stop-vite-app" "run-fake-arduino" "install-packages" "exit")
 
-    # Cleanup function to re-enable icrnl on script exit
     cleanup() {
-        # Re-enable input carriage return to newline translation
         stty icrnl
     }
-
-    # Register cleanup to run on script exit
     trap cleanup EXIT
-    # Function to update suggestions based on current input
     update_suggestions() {
         suggestions=()
         for i in "${commands[@]}"; do
@@ -82,78 +118,52 @@ shell_mode() {
                 suggestions+=("$i")
             fi
         done
-        
     }
-
-    # Function to clear the screen and display the current state
     display_state() {
         clear
-          # Clears the terminal screen
         printf "${CYAN}project-manager> ${NO_COLOR}${input}\n"
         for suggestion in "${suggestions[@]}"; do
             printf "   --- $suggestion\n"
         done
-        
     }
-
-    # Main loop to process input
     while true; do
-        display_state  # Display initial state
-
-        # Read user input (one character at a time)
+        display_state
         IFS= read -r -n1 -s char
-        
-        printf "Char: '%s', ASCII: %x\n" "$char" "'$char"
         case $char in
-               $'\x0a'|$'\x0d'|$'\x00')  # Enter key
-                
+            $'\x0a'|$'\x0d'|$'\x00')
                 if [[ " ${commands[@]} " =~ " ${input} " ]]; then
-                    
-                    # Execute the command if it's exactly one of the options
                     case $input in
                         help) show_help ;;
                         start-docker-compose) start_docker_compose ;;
                         stop-docker-compose) stop_docker_compose ;;
                         run-node-server) run_node_server ;;
+                        stop-node-server) stop_node_server ;;
                         run-vite-app) run_vite_app ;;
+                        stop-vite-app) stop_vite_app ;;
                         run-fake-arduino) run_fake_arduino ;;
-                        exit)
-                            
-                            break  # Exit the loop
-                            ;;
-                        *)
-                            printf "${RED}Unknown command: $input.${NO_COLOR}\n"
-                            ;;
+                        install-packages) install_packages ;;
+                        exit) break ;;
+                        *) printf "${RED}Unknown command: $input.${NO_COLOR}\n" ;;
                     esac
                 fi
-                    
-                
-                input=""  # Reset input after executing a command
+                input=""
                 ;;
-            $'\x7f')  # Backspace
-                
-                input="${input%?}"  # Remove the last character from input
+            $'\x7f')
+                input="${input%?}"
                 ;;
-            $'\x09')  # Tab key
-                
-                [[ ${#suggestions[@]} -gt 0 ]] && input="${suggestions[0]}"  # Autocomplete the first suggestion
+            $'\x09')
+                [[ ${#suggestions[@]} -gt 0 ]] && input="${suggestions[0]}"
                 ;;
-            $'\x20')  # Space
-                
-                input+=" "  # Append space to input
+            $'\x20')
+                input+=" "
                 ;;
             *)
-                
-                input+="$char"  # Append character to input
+                input+="$char"
                 ;;
         esac
-
-        update_suggestions  # Update suggestions based on new input
+        update_suggestions
     done
 }
-
-
-
 
 # Main script logic enhanced for color and shell mode
 if [ $# -eq 0 ]; then
@@ -165,8 +175,11 @@ else
         start-docker-compose) start_docker_compose ;;
         stop-docker-compose) stop_docker_compose ;;
         run-node-server) run_node_server ;;
+        stop-node-server) stop_node_server ;;
         run-vite-app) run_vite_app ;;
+        stop-vite-app) stop_vite_app ;;
         run-fake-arduino) run_fake_arduino ;;
+        install-packages) install_packages ;;
         shell) shell_mode ;;
         *) echo -e "${RED}Invalid option: $1. Type '$0 help' for a list of commands.${NO_COLOR}" ;;
     esac
