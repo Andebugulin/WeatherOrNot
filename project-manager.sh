@@ -4,6 +4,7 @@
 GREEN="\033[32m"
 RED="\033[31m"
 CYAN="\033[36m"
+NO_COLOR="\033[0m"  # Define NO_COLOR to reset to default terminal color
 
 # Function to start docker-compose services
 start_docker_compose() {
@@ -13,19 +14,21 @@ start_docker_compose() {
     cd - || exit
 }
 
-# Function to run the node server
+# Function to run the node server in the background
 run_node_server() {
     echo -e "${GREEN}Running node server...${NO_COLOR}"
     cd web-app/ || exit
-    node src/server.js
+    nohup node src/server.js > server.log 2>&1 &  # Run in background and log output
+    echo "Node server started. Logs are being written to 'server.log'"
     cd - || exit
 }
 
-# Function to run Vite app
+# Function to run Vite app in the background
 run_vite_app() {
     echo -e "${GREEN}Starting Vite app...${NO_COLOR}"
     cd web-app/ || exit
-    npm run dev
+    nohup npm run dev > vite.log 2>&1 &  # Run in background and log output
+    echo "Vite app started. Logs are being written to 'vite.log'"
     cd - || exit
 }
 
@@ -42,7 +45,6 @@ stop_docker_compose() {
     docker-compose down
     cd - || exit
 }
-
 # Update the show_help function with the new command
 show_help() {
     echo -e "${CYAN}Usage: $(basename "$0") [option]"
@@ -155,6 +157,7 @@ shell_mode() {
 
 # Main script logic enhanced for color and shell mode
 if [ $# -eq 0 ]; then
+    show_help
     shell_mode
 else
     case $1 in
@@ -168,4 +171,3 @@ else
         *) echo -e "${RED}Invalid option: $1. Type '$0 help' for a list of commands.${NO_COLOR}" ;;
     esac
 fi
-
