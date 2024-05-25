@@ -1,31 +1,35 @@
 # WeatherOrNot
----
+
+<p align="center">
+  <img src="./weather_or_not.png" alt="Wizard contemplating weather or not" width="500"/>
+</p>
 
 ## Structure
-```          
+
+```
 your-project-name/
 │
 ├── firmware/                 # All microcontroller-related code
-│   ├── src/                  
+│   ├── src/
 │   │   ├── <something.ino>   # main firmware
-│   │  
+│   │
 │   ├── lib/                  # External libraries
 │
-├── server/                  
+├── server/
 │   ├── Dockerfile            # Dockerfile for server environment
 │   ├── docker-compose.yml    # Docker compose file to manage services
-│   └── app/                  
+│   └── app/
 │       ├── mqtt/             # MQTT broker setup
 │       └── database/         # Database scripts
-│           ├── models/       
-│           └── migrations/   
+│           ├── models/
+│           └── migrations/
 │
 ├── web-app/                  # web for end-users
-│   ├── src/                  
-│   │   ├── components/       
-│   │   ├── services/        
-│   │   └── hooks/            
-│   ├── index.html            
+│   ├── src/
+│   │   ├── components/
+│   │   ├── services/
+│   │   └── hooks/
+│   ├── index.html
 │   ├── vite.config.js        # Vite configuration file
 │   └── package.json          # NPM package file
 │
@@ -39,10 +43,12 @@ This project sets up a real-time temperature monitoring system using an ESP32 mi
 ## Prerequisites
 
 ### Hardware (optional for testing):
+
 - ESP32 microcontroller
 - DHT11 temperature and humidity sensor
 
 ### Software:
+
 - Arduino IDE or PlatformIO for ESP32 firmware development
 - Docker for running the MQTT broker
 - Node.js and npm for the web application
@@ -51,10 +57,12 @@ This project sets up a real-time temperature monitoring system using an ESP32 mi
 ## Installation
 
 ### Setting Up the MQTT Broker
+
 1. Navigate to the `server` directory.
 2. Run `docker-compose up -d` to start the Mosquitto MQTT broker.
 
 ### Configuring the ESP32 (optional for testing)
+
 1. Open the Arduino IDE or PlatformIO.
 2. Load the provided firmware code for reading temperature data.
 3. Adjust the WiFi and MQTT server settings in the code to match your environment.
@@ -62,6 +70,7 @@ This project sets up a real-time temperature monitoring system using an ESP32 mi
 5. Alternatively, you can simulate ESP32 measurements for testing with the command `./scripts/fake_arduino.sh`.
 
 ### Running the Web Application
+
 1. Navigate to the `web-app` directory.
 2. Run `npm install` to install dependencies.
 3. Start the server that subscribes to MQTT with `npm run start-server`.
@@ -80,6 +89,7 @@ This project includes a bash script `project-manager.sh` to easily manage all th
 - **Enter Shell Mode:** `./project-manager.sh shell` for interactive commands.
 
 ### Shell Mode
+
 Shell mode offers an interactive way to execute commands. Type part of a command and press TAB to auto-complete based on available suggestions.
 
 ## Troubleshooting
@@ -90,4 +100,3 @@ Shell mode offers an interactive way to execute commands. Type part of a command
 ## Contributing
 
 We welcome contributions! If you'd like to help improve the project, please fork the repository and submit a pull request with your changes.
-
